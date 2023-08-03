@@ -9,6 +9,8 @@ using namespace std;
 
 #define MAX_PARTICLES 100
 
+#define MAX_PARTICLES_BULLET 15
+
 bool CheckCollisionRec(Rectangle rec1, Rectangle rec2) {
     return (rec1.x < rec2.x + rec2.width && rec1.x + rec1.width / 2  > rec2.x &&
             rec1.y < rec2.y + rec2.height  && rec1.y + rec1.height / 2 > rec2.y);
@@ -49,7 +51,7 @@ typedef struct {
 } Particle;
 
 int main() {
-    const int screenWidth = 800;
+    const int screenWidth  = 800;
     const int screenHeight = 450;
 
     InitWindow(screenWidth, screenHeight, "pewpew");
@@ -57,24 +59,23 @@ int main() {
     SetTargetFPS(60);
 
     Rectangle rec;
-    rec.height = screenHeight / 20;
-    rec.width = screenHeight / 20;
-    rec.x =  screenWidth / 2 - rec.width / 2; // Center the rectangle horizontally
-    rec.y = screenHeight / 2 - rec.height / 2; // Center the rectangle vertically
+    rec.height             = screenHeight / 20;
+    rec.width              = screenHeight / 20;
+    rec.x                  =  screenWidth / 2 - rec.width / 2; // Center the rectangle horizontally
+    rec.y                  = screenHeight / 2 - rec.height / 2; // Center the rectangle vertically
 
     Dash dash;
-    dash.isDashing = false;
-    dash.canDash = true;
-    dash.dashSpeed = 20.0f;
-    dash.dashCooldown = 0.5f;
+    dash.isDashing         = false;
+    dash.canDash           = true;
+    dash.dashSpeed         = 20.0f;
+    dash.dashCooldown      = 0.5f;
     dash.dashCooldownTimer = 0.5f;
-    dash.dashDuration = 0.15f; // Duration of the dash in seconds
+    dash.dashDuration      = 0.15f; // Duration of the dash in seconds
     dash.dashDurationTimer = 0.0f;
-    dash.dashDirection = {0, 0};
+    dash.dashDirection     = {0, 0};
 
-    float angle = 0.0f;
-
-    float dash_size = 100;
+    float angle         = 0.0f;
+    float dash_size     = 100;
     float dash_max_size = 100;
 
     Bullet bullets[100]; // An array to store the spawned bullets
@@ -88,31 +89,33 @@ int main() {
         particles[i].active = false;
     }
 
+    Particle bullet_particles[MAX_PARTICLES_BULLET];
+    for (int i = 0; i < MAX_PARTICLES_BULLET; i++) {
+        bullet_particles[i].active = false;
+    }
+
     while (!WindowShouldClose())
     {
-        float dashCooldownProgress = dash.dashCooldownTimer / dash.dashCooldown;
+        float dashCooldownProgress   = dash.dashCooldownTimer / dash.dashCooldown;
+        Vector2 mousePos             = GetMousePosition();
 
-        // getting position of a mouse
-        Vector2 mousePos = GetMousePosition();
-
-        // moving implementation
-        if (IsKeyDown(KEY_W)) rec.y    -= 6.0f;
-        if (IsKeyDown(KEY_A)) rec.x  -= 6.0f;
-        if (IsKeyDown(KEY_S)) rec.y  += 6.0f;
+        // moving mechanic
+        if (IsKeyDown(KEY_W)) rec.y -= 6.0f;
+        if (IsKeyDown(KEY_A)) rec.x -= 6.0f;
+        if (IsKeyDown(KEY_S)) rec.y += 6.0f;
         if (IsKeyDown(KEY_D)) rec.x += 6.0f;
         
-
-        // wrapping implementation 
-        if (rec.x <= -rec.width) rec.x = screenWidth + rec.width;
-        if (rec.x > screenWidth + rec.width) rec.x = 0 - rec.width;
-        if (rec.y < - rec.height) rec.y = screenHeight + rec.height;
+        // wrapping mechanic 
+        if (rec.x <= -rec.width) rec.x               = screenWidth + rec.width;
+        if (rec.x > screenWidth + rec.width) rec.x   = 0 - rec.width;
+        if (rec.y < - rec.height) rec.y              = screenHeight + rec.height;
         if (rec.y > screenHeight + rec.height) rec.y = 0 - rec.height;
 
-        // rotation implm
+        // mouse rotation mechanic
         angle = atan2f(mousePos.y - (rec.y + rec.height / 2), mousePos.x - (rec.x + rec.width / 2));
         angle = angle * RAD2DEG;
 
-        // dash implementation w s a d + pace
+        // dash mechanic (w s a d + space)
         dash.dashDirection.x = 0;
         dash.dashDirection.y = 0;
 
@@ -128,8 +131,8 @@ int main() {
         }
 
         if (IsKeyPressed(KEY_SPACE) && dash.canDash) {
-            dash.isDashing = true;
-            dash.canDash = false;
+            dash.isDashing         = true;
+            dash.canDash           = false;
             dash.dashDurationTimer = 0.0f;
             dash.dashCooldownTimer = 0.0f;
         }
@@ -153,30 +156,30 @@ int main() {
             }
         }
 
-        // shooooooting rra rra rra 
+        // shooting mechanic (rra rrra rrrrra)
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            if (numBullets < 100) { // Limit the number of bullets to 100
+            if (numBullets < 100) { 
                 Rectangle newRect;
-                newRect.width = 17;
+                newRect.width  = 17;
                 newRect.height = 17;
-                newRect.x = rec.x; // Center the rectangle on the mouse click position
-                newRect.y = rec.y;
+                newRect.x      = rec.x; 
+                newRect.y      = rec.y;
 
                 Color newColor = (Color){ GetRandomValue(50, 255), GetRandomValue(50, 255), GetRandomValue(50, 255), 255 };
 
                 Vector2 direction;
-                direction.x = GetMouseX() - newRect.x - newRect.width/2; // Calculate direction vector towards the mouse
-                direction.y = GetMouseY() - newRect.y - newRect.height/2;
+                direction.x  = GetMouseX() - newRect.x - newRect.width/2; // Calculate direction vector towards the mouse
+                direction.y  = GetMouseY() - newRect.y - newRect.height/2;
                 float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
                 direction.x /= length;
                 direction.y /= length;
 
-                bullets[numBullets].rect = newRect;
-                bullets[numBullets].color = newColor;
+                bullets[numBullets].rect      = newRect;
+                bullets[numBullets].color     = newColor;
                 bullets[numBullets].direction = direction;
-                bullets[numBullets].rotation = angle;
-                bullets[numBullets].active = true;
-                bullets[numBullets].damage = 10.0f;
+                bullets[numBullets].rotation  = angle;
+                bullets[numBullets].active    = true;
+                bullets[numBullets].damage    = 10.0f;
                 numBullets++;
             }
         }
@@ -185,27 +188,21 @@ int main() {
             bullets[i].rect.x += bullets[i].direction.x * 15;
             bullets[i].rect.y += bullets[i].direction.y * 15;
 
-            // Despawn bullets that have left the screen
-            if (bullets[i].rect.x > screenWidth || bullets[i].rect.y > screenHeight ||
-                bullets[i].rect.x + bullets[i].rect.width < 0 || bullets[i].rect.y + bullets[i].rect.height < 0) {
-                // Move the last rectangle in the array to the current index and decrement the count
+            if (bullets[i].rect.x > screenWidth || bullets[i].rect.y > screenHeight || bullets[i].rect.x + bullets[i].rect.width < 0 || bullets[i].rect.y + bullets[i].rect.height < 0) {
                 bullets[i] = bullets[numBullets - 1];
                 numBullets--;
             }
         }
 
-        //// spawn enemies
-        //playerRect.x = GetMouseX() - playerRect.width / 2;
-        //playerRect.y = GetMouseY() - playerRect.height / 2;
+        //// enemies spawn mechanic
         if (GetRandomValue(0, 100) < 2 && numEnemies < 10) { // Chance to spawn new enemy: 2%
             Rectangle newRect;
-            newRect.width = 30;
+            newRect.width  = 30;
             newRect.height = 30;
-            newRect.x = GetRandomValue(0, screenWidth - newRect.width);
-            newRect.y = GetRandomValue(0, screenHeight - newRect.height);
-
-            int a = GetRandomValue(0, 10);
-            int b = GetRandomValue(0, 10);
+            newRect.x      = GetRandomValue(0, screenWidth - newRect.width);
+            newRect.y      = GetRandomValue(0, screenHeight - newRect.height);
+            int          a = GetRandomValue(0, 10);
+            int          b = GetRandomValue(0, 10);
 
             if(a % 2 == 0) {
                 newRect.x -= screenWidth;
@@ -219,8 +216,8 @@ int main() {
                 newRect.y += screenWidth;
             }
 
-            enemies[numEnemies].rect = newRect;
-            enemies[numEnemies].color = RED;
+            enemies[numEnemies].rect   = newRect;
+            enemies[numEnemies].color  = {255, 0, 0, 255};
             enemies[numEnemies].health = 50;
             numEnemies++;
         }
@@ -243,30 +240,48 @@ int main() {
 
                 for (int j = 0; j < numBullets; j++) {
                     if (bullets[j].active && CheckCollisionRec(bullets[j].rect, enemies[i].rect)) {
+
+                        for (int k = 0; k < MAX_PARTICLES_BULLET; k++) {
+                            if (!bullet_particles[k].active) {
+                                bullet_particles[k].active     = true;
+                                bullet_particles[k].position.x = bullets[j].rect.x + bullets[j].rect.width / 2;
+                                bullet_particles[k].position.y = bullets[j].rect.y + bullets[j].rect.height / 2;
+                                bullet_particles[k].velocity.x = GetRandomValue(-10, 10);
+                                bullet_particles[k].velocity.y = GetRandomValue(-10, 10);
+                                bullet_particles[k].radius     = { (float)GetRandomValue(3, 6), (float)GetRandomValue(3, 6)};
+                                bullet_particles[k].color      = bullets[j].color;
+                            }
+                        }
+                        
                         enemies[i].health -= bullets[j].damage;
+
+                        
                         
                         if(enemies[i].health <= 0){
 
                             // Create particle explosion at enemy position
                             for (int k = 0; k < MAX_PARTICLES; k++) {
                                 if (!particles[k].active) {
-                                    particles[k].active = true;
+                                    particles[k].active     = true;
                                     particles[k].position.x = enemies[i].rect.x + enemies[i].rect.width / 2;
                                     particles[k].position.y = enemies[i].rect.y + enemies[i].rect.height / 2;
                                     particles[k].velocity.x = GetRandomValue(-10, 10);
                                     particles[k].velocity.y = GetRandomValue(-10, 10);
-                                    particles[k].radius = { (float)GetRandomValue(3, 6), (float)GetRandomValue(3, 6)};
-                                    particles[k].color = bullets[j].color;
+                                    particles[k].radius     = { (float)GetRandomValue(3, 6), (float)GetRandomValue(3, 6)};
+                                    particles[k].color      = {255,0,0,255};
                                 }
                             }
+                            
                             enemies[i].color = {0,0,0,0};
                             enemies[i] = enemies[numEnemies - 1];
                             numEnemies--;
                         }
-
-                        bullets[j].color = {0,0,0,0};
+                        
+                        //bullets[j].color = {0,0,0,0};
                         bullets[j].active = false;
                         bullets[j].damage = 0.0f;
+                        bullets[i]        = bullets[numBullets - 1];
+                        numBullets--;
                     }
                 }
 
@@ -285,6 +300,21 @@ int main() {
                 }
             }
         }
+
+        // Update the positions of the particles for the explosion effect
+        for (int i = 0; i < MAX_PARTICLES_BULLET; i++) {
+            if (bullet_particles[i].active) {
+                bullet_particles[i].position.x += bullet_particles[i].velocity.x;
+                bullet_particles[i].position.y += bullet_particles[i].velocity.y;
+                bullet_particles[i].velocity.y += 0.1f; // Apply gravity to the particles
+
+                // Despawn particles when they go out of the screen or fade out
+                if (bullet_particles[i].position.y > screenHeight || bullet_particles[i].color.a <= 0) {
+                    bullet_particles[i].active = false;
+                }
+            }
+        }
+
         BeginDrawing();
             ClearBackground(BLACK);
             for (int i = 0; i < numBullets; i++) {
@@ -298,6 +328,12 @@ int main() {
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (particles[i].active) {
                     DrawRectangleV(particles[i].position, {particles[i].radius.x, particles[i].radius.y}, particles[i].color);
+                }
+            }
+
+            for (int i = 0; i < MAX_PARTICLES_BULLET; i++) {
+                if (bullet_particles[i].active) {
+                    DrawRectangleV(bullet_particles[i].position, {bullet_particles[i].radius.x, bullet_particles[i].radius.y}, bullet_particles[i].color);
                 }
             }
             std::string s = std::to_string(numBullets);
