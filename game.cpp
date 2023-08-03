@@ -4,7 +4,10 @@
 #include <string>
 #include <stdio.h>
 #include <iostream>
+
 using namespace std;
+
+#define MAX_PARTICLES 100
 
 bool CheckCollisionRec(Rectangle rec1, Rectangle rec2) {
     return (rec1.x < rec2.x + rec2.width && rec1.x + rec1.width / 2  > rec2.x &&
@@ -37,6 +40,13 @@ typedef struct {
     float health;
 } Enemy;
 
+typedef struct {
+    Vector2 position;
+    Vector2 velocity;
+    Vector2 radius;
+    Color color;
+    bool active;
+} Particle;
 
 int main() {
     const int screenWidth = 800;
@@ -72,6 +82,11 @@ int main() {
 
     Enemy enemies[10];
     int numEnemies = 0;
+
+    Particle particles[MAX_PARTICLES];
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        particles[i].active = false;
+    }
 
     while (!WindowShouldClose())
     {
@@ -231,6 +246,19 @@ int main() {
                         enemies[i].health -= bullets[j].damage;
                         
                         if(enemies[i].health <= 0){
+
+                            // Create particle explosion at enemy position
+                            for (int k = 0; k < MAX_PARTICLES; k++) {
+                                if (!particles[k].active) {
+                                    particles[k].active = true;
+                                    particles[k].position.x = enemies[i].rect.x + enemies[i].rect.width / 2;
+                                    particles[k].position.y = enemies[i].rect.y + enemies[i].rect.height / 2;
+                                    particles[k].velocity.x = GetRandomValue(-10, 10);
+                                    particles[k].velocity.y = GetRandomValue(-10, 10);
+                                    particles[k].radius = { (float)GetRandomValue(3, 6), (float)GetRandomValue(3, 6)};
+                                    particles[k].color = bullets[j].color;
+                                }
+                            }
                             enemies[i].color = {0,0,0,0};
                             enemies[i] = enemies[numEnemies - 1];
                             numEnemies--;
@@ -244,6 +272,19 @@ int main() {
 
         }
         
+        // Update the positions of the particles for the explosion effect
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+            if (particles[i].active) {
+                particles[i].position.x += particles[i].velocity.x;
+                particles[i].position.y += particles[i].velocity.y;
+                particles[i].velocity.y += 0.1f; // Apply gravity to the particles
+
+                // Despawn particles when they go out of the screen or fade out
+                if (particles[i].position.y > screenHeight || particles[i].color.a <= 0) {
+                    particles[i].active = false;
+                }
+            }
+        }
         BeginDrawing();
             ClearBackground(BLACK);
             for (int i = 0; i < numBullets; i++) {
@@ -252,6 +293,12 @@ int main() {
 
             for (int i = 0; i < numEnemies; i++) {
                 DrawRectangleRec(enemies[i].rect, enemies[i].color);
+            }
+
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (particles[i].active) {
+                    DrawRectangleV(particles[i].position, {particles[i].radius.x, particles[i].radius.y}, particles[i].color);
+                }
             }
             std::string s = std::to_string(numBullets);
             char const *pchar = s.c_str(); 
