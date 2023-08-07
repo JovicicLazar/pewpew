@@ -2,4 +2,4 @@
 
 set xe 
 
-g++ -O3 -Wall -Wextra game.cpp -o game -lraylib
+g++ -O3 -Wall -Wextra pewpew.cpp -o pewpew -lraylib
