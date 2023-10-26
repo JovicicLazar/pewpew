@@ -1,6 +1,6 @@
 # pewpew
 
-"pewpew" is an exciting little game developed using the Raylib, specifically designed for the C programming language. This project was a labor of passion, combining my love for programming. It is also compiled for wasm and ported to the WEB as a platform.
+"pewpew" is an exciting little game developed using the Raylib, specifically designed for the C++ programming language. This project was a labor of passion, combining my love for programming. It is also compiled for wasm and ported to the WEB as a platform.
 
 # References:  
 
